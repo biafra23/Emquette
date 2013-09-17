@@ -16,11 +16,11 @@ public class ConfigureLog4j {
         System.out.println("ConfigureLog4j...");
         final LogConfigurator logConfigurator = new LogConfigurator();
 
-        logConfigurator.setFileName(Environment.getExternalStorageDirectory() + File.separator + "beacon.log");
+        logConfigurator.setFileName(Environment.getExternalStorageDirectory() + File.separator + "emquette.log");
         logConfigurator.setRootLevel(Level.DEBUG);
         // Set log level of a specific logger
         logConfigurator.setLevel("org.apache", Level.ERROR);
-//        logConfigurator.setLevel("com.jaeckel.beacon", Level.DEBUG);
+//        logConfigurator.setLevel("com.jaeckel.emquette", Level.DEBUG);
 
 
         // see http://logging.apache.org/log4j/1.2/apidocs/org/apache/log4j/PatternLayout.html for documentation
