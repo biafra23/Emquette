@@ -13,7 +13,8 @@ public class MainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
 
-        startService(new Intent(this, MQTTService.class));
+        startService(new Intent(this, MQTTService2.class));
+//        startService(new Intent(this, MQTTService.class));
 
 
     }

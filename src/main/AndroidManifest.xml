@@ -26,6 +26,7 @@
         <activity android:name=".MQTTNotifier" />
 
         <service android:name=".MQTTService" />
+        <service android:name=".MQTTService2" />
 
     </application>
 
