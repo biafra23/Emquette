@@ -14,6 +14,9 @@ repositories {
     maven {
         url "http://nexus.jaeckel.com:8081/nexus/content/repositories/thirdparty"
     }
+    maven {
+        url "https://repo.eclipse.org/content/repositories/paho-releases/"
+    }
 }
 
 android {
