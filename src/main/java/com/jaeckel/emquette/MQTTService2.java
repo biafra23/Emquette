@@ -4,10 +4,11 @@ import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
 
+
+import android.os.Message;
 import org.fusesource.mqtt.client.Future;
 import org.fusesource.mqtt.client.FutureConnection;
 import org.fusesource.mqtt.client.MQTT;
-import org.fusesource.mqtt.client.Message;
 import org.fusesource.mqtt.client.QoS;
 import org.fusesource.mqtt.client.Topic;
 
@@ -64,7 +65,6 @@ public class MQTTService2 extends Service {
 
             f1.await();
 
-            connection.
             App.log.info("connection.connected");
 
             Topic[] topics = {new Topic("testFooBar", QoS.AT_LEAST_ONCE)};
@@ -73,13 +73,13 @@ public class MQTTService2 extends Service {
 
             Future<byte[]> qoses = connection.subscribe(topics);
 
-            App.log.info("connection.receive()");
-            Future<Message> message = connection.receive();
-
-            App.log.debug("message.topic: " + message.await().getTopic());
-            byte[] payload = message.await().getPayload();
-            // process the message then:
-            message.await().ack();
+//            App.log.info("connection.receive()");
+//            Future<Message> message = connection.receive();
+//
+//            App.log.debug("message.topic: " + message.await().getTopic());
+//            byte[] payload = message.await().getPayload();
+//            // process the message then:
+//            message.await().ack();
 
         } catch (URISyntaxException e) {
 
