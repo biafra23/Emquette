@@ -3,14 +3,7 @@ package com.jaeckel.emquette;
 import android.app.Service;
 import android.content.Intent;
 import android.os.IBinder;
-
-
-import android.os.Message;
-import org.fusesource.mqtt.client.Future;
-import org.fusesource.mqtt.client.FutureConnection;
-import org.fusesource.mqtt.client.MQTT;
-import org.fusesource.mqtt.client.QoS;
-import org.fusesource.mqtt.client.Topic;
+import org.fusesource.mqtt.client.*;
 
 import java.net.URISyntaxException;
 
@@ -24,7 +17,9 @@ public class MQTTService2 extends Service {
     @Override
     public IBinder onBind(Intent intent) {
         return null;
-    }
+
+
+            }
 
 //    public class LocalBinder<S> extends Binder {
 //        private WeakReference<S> mService;
