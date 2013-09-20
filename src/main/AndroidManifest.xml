@@ -27,6 +27,7 @@
 
         <service android:name=".MQTTService" />
         <service android:name=".MQTTService2" />
+        <service android:name=".PahoService"/>
 
     </application>
 

@@ -37,7 +37,6 @@ dependencies {
     compile 'log4j:log4j:1.2.14'
     compile 'de.mindpipe.android:android-logging-log4j:1.0.3'
     compile 'org.eclipse.paho:mqtt-client:0.4.0'
-//    compile 'com.google.android.gms:play-services:3.2.25'
 
 
 }
