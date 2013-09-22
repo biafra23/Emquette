@@ -120,11 +120,15 @@ public class PahoService extends Service implements MqttCallback {
     private boolean connectToBroker() {
         try {
 
+            MqttConnectOptions mqttConnectOptions = new MqttConnectOptions();
+            mqttConnectOptions.setKeepAliveInterval(KEEP_ALIVE_SECONDS);
+
             mqttClient = new MqttClient("tcp://test.mosquitto.org:1883", "CLIENT_ID", null);
 //            MqttClient mqttClient = new MqttClient("ssl://test.mosquitto.org:8883", "CLIENT_ID", null);
 
             mqttClient.setCallback(this);
-            mqttClient.connect();
+
+            mqttClient.connect(mqttConnectOptions);
 
         } catch (MqttException e) {
             App.log.error("Creating client", e);
@@ -170,7 +174,7 @@ public class PahoService extends Service implements MqttCallback {
 
     private class NetworkStatusReceiver extends BroadcastReceiver {
         @Override
-        public void onReceive(Context context, Intent intent) {
+        public void onReceive(final Context context, final Intent intent) {
             App.log.debug("Received: intent: " + intent);
 
             if (isOnline()) {
@@ -180,6 +184,13 @@ public class PahoService extends Service implements MqttCallback {
                 // T O D O : register alarm for keep alive ping
                 scheduleKeepAliveAlarm();
 
+                // reconnect
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        handleStart(intent, 0);
+                    }
+                }).start();
 
             } else {
                 App.log.debug("Offline now");
@@ -292,7 +303,7 @@ public class PahoService extends Service implements MqttCallback {
 
     private void notifyUser(String alert, String title, String body) {
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        Notification notification = new Notification(R.drawable.ic_launcher, alert,
+        Notification notification = new Notification(R.drawable.ic_launcher, "A:" + alert,
                 System.currentTimeMillis());
         notification.defaults |= Notification.DEFAULT_LIGHTS;
         notification.defaults |= Notification.DEFAULT_SOUND;
