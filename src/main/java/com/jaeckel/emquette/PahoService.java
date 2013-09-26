@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Binder;
 import android.os.IBinder;
+import android.os.PowerManager;
 import org.eclipse.paho.client.mqttv3.*;
 
 import java.util.Calendar;
@@ -16,18 +17,16 @@ import java.util.Calendar;
 
 public class PahoService extends Service implements MqttCallback {
 
-
-    // constant used internally to schedule the next ping event
     public static final String MQTT_PING_ACTION = "com.jaeckel.emquette.PING";
     public static final int KEEP_ALIVE_SECONDS = 20 * 60;
     private static final int MQTT_NOTIFICATION_UPDATE = 1;
-//    public static final int KEEP_ALIVE_SECONDS = 2 * 60;
 
     private NetworkStatusReceiver networkStatusReceiver;
     private PingSender pingSender;
     private MqttClient mqttClient;
     private String topicName = "testFooBar";
     private MqttMessage pingMessage = new MqttMessage("PING".getBytes());
+
 
     private Binder mBinder;
 
@@ -37,7 +36,7 @@ public class PahoService extends Service implements MqttCallback {
 
     @Override
     public int onStartCommand(final Intent intent, int flags, final int startId) {
-        App.log.debug("onStartCommand()");
+        Log.d("onStartCommand()");
 
         new Thread(new Runnable() {
             @Override
@@ -46,10 +45,7 @@ public class PahoService extends Service implements MqttCallback {
             }
         }, "MQTTservice").start();
 
-        // return START_NOT_STICKY - we want this Service to be left running
-        //  unless explicitly stopped, and it's process is killed, we want it to
-        //  be restarted
-        App.log.debug("Starting sticky");
+        Log.d("Starting sticky");
         return START_STICKY;
     }
 
@@ -63,7 +59,7 @@ public class PahoService extends Service implements MqttCallback {
             }
 
             if (networkStatusReceiver == null) {
-                App.log.info("Registering CONNECTIVITY_ACTION receiver");
+                Log.d("Registering CONNECTIVITY_ACTION receiver");
                 networkStatusReceiver = new NetworkStatusReceiver();
                 registerReceiver(networkStatusReceiver,
                         new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
@@ -87,34 +83,12 @@ public class PahoService extends Service implements MqttCallback {
         return ((mqttClient != null) && (mqttClient.isConnected() == true));
     }
 
-//    public class LocalBinder<S> extends Binder {
-//        private WeakReference<S> mService;
-//
-//        public LocalBinder(S service) {
-//            mService = new WeakReference<S>(service);
-//        }
-//
-//        public S getService() {
-//            return mService.get();
-//        }
-//
-//        public void close() {
-//            mService = null;
-//        }
-//    }
 
     @Override
     public void onCreate() {
         super.onCreate();
-        App.log.debug("onCreate()");
+        Log.d("onCreate()");
 
-//        // reset status variable to initial state
-////        connectionStatus = MQTTConnectionStatus.INITIAL;
-//
-//        // create a binder that will let the Activity UI send
-//        //   commands to the Service
-//        mBinder = new LocalBinder<PahoService>(this);
-//        // define the connection to the broker
     }
 
     private boolean connectToBroker() {
@@ -124,14 +98,11 @@ public class PahoService extends Service implements MqttCallback {
             mqttConnectOptions.setKeepAliveInterval(KEEP_ALIVE_SECONDS);
 
             mqttClient = new MqttClient("tcp://test.mosquitto.org:1883", "CLIENT_ID", null);
-//            MqttClient mqttClient = new MqttClient("ssl://test.mosquitto.org:8883", "CLIENT_ID", null);
-
             mqttClient.setCallback(this);
-
             mqttClient.connect(mqttConnectOptions);
 
         } catch (MqttException e) {
-            App.log.error("Creating client", e);
+            Log.e("Creating client", e);
         }
 
         return true;
@@ -140,25 +111,46 @@ public class PahoService extends Service implements MqttCallback {
     private void subscribeToTopic(String topicName) {
 
         try {
-            App.log.debug("Subscribing topic: " + topicName);
+            Log.d("Subscribing topic: " + topicName);
 
             mqttClient.subscribe(topicName);
 
         } catch (MqttException e) {
-            App.log.error("Subscribing topic: " + topicName, e);
+            Log.e("Subscribing topic: " + topicName, e);
         }
     }
 
-    // MqttCallback callbacks
     @Override
     public void connectionLost(Throwable throwable) {
-        App.log.error("connectionLost()", throwable);
+        Log.e("connectionLost()", throwable);
 
+        PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
+        PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "MQTT");
+        wl.acquire();
+
+        if (isOnline() == false) {
+
+            Log.d("We're offline()");
+
+        } else {
+
+            Log.d("We're online()");
+
+            if (!isAlreadyConnected()) {
+                Log.d("reconnectToBrokerr()");
+                // try to reconnect
+                if (connectToBroker()) {
+                    subscribeToTopic(topicName);
+                }
+            }
+        }
+
+        wl.release();
     }
 
     @Override
     public void messageArrived(String s, MqttMessage mqttMessage) throws Exception {
-        App.log.debug("messageArrived: s: " + s + ", mqttMessage: " + mqttMessage);
+        Log.d("messageArrived: s: " + s + ", mqttMessage: " + mqttMessage);
 
         scheduleKeepAliveAlarm();
 
@@ -168,17 +160,17 @@ public class PahoService extends Service implements MqttCallback {
 
     @Override
     public void deliveryComplete(IMqttDeliveryToken iMqttDeliveryToken) {
-        App.log.debug("deliveryComplete: iMqttDeliveryToken: " + iMqttDeliveryToken);
+        Log.d("deliveryComplete: iMqttDeliveryToken: " + iMqttDeliveryToken);
 
     }
 
     private class NetworkStatusReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(final Context context, final Intent intent) {
-            App.log.debug("Received: intent: " + intent);
+            Log.d("Received: intent: " + intent);
 
             if (isOnline()) {
-                App.log.debug("Online now");
+                Log.d("Online now");
                 notifyUser("Online", "Online", "Device is online now");
 
                 // T O D O : register alarm for keep alive ping
@@ -193,7 +185,7 @@ public class PahoService extends Service implements MqttCallback {
                 }).start();
 
             } else {
-                App.log.debug("Offline now");
+                Log.d("Offline now");
                 // T O D O : unregister Alarm for keep alive ping
                 notifyUser("Offline", "Offline", "Device is offline now");
             }
@@ -238,7 +230,7 @@ public class PahoService extends Service implements MqttCallback {
         //  shortly before the keep alive period expires
         // it means we're pinging slightly more frequently than necessary
         Calendar wakeUpTime = Calendar.getInstance();
-        wakeUpTime.add(Calendar.SECOND, KEEP_ALIVE_SECONDS);
+        wakeUpTime.add(Calendar.SECOND, KEEP_ALIVE_SECONDS - 2); // Are two seconds enough to wake up and send the ping message?
 
         // T O D O : Try setInexactRepeating(): See http://developer.android.com/training/efficient-downloads/regular_updates.html#OptimizedPolling
         AlarmManager aMgr = (AlarmManager) getSystemService(ALARM_SERVICE);
@@ -246,40 +238,27 @@ public class PahoService extends Service implements MqttCallback {
                 wakeUpTime.getTimeInMillis(),
                 pendingIntent);
 
-        App.log.info("Scheduled ping for: " + wakeUpTime.getTime());
+        Log.d("Scheduled ping for: " + wakeUpTime.getTime());
 
     }
 
 
-    /*
-   * Used to implement a keep-alive protocol at this Service level - it sends
-   *  a PING message to the server, then schedules another ping after an
-   *  interval defined by keepAliveSeconds
-   */
     public class PingSender extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            // Note that we don't need a wake lock for this method (even though
-            //  it's important that the phone doesn't switch off while we're
-            //  doing this).
-            // According to the docs, "Alarm Manager holds a CPU wake lock as
-            //  long as the alarm receiver's onReceive() method is executing.
-            //  This guarantees that the phone will not sleep until you have
-            //  finished handling the broadcast."
-            // This is good enough for our needs.
+            // AlarmManager is supposed to give us a Wakelock until onReceive() is done
 
             try {
-                App.log.info("Sending ping.");
+                Log.d("Sending ping.");
 
-                // T O D O : send something
 //                mqttClient.ping();
-                mqttClient.publish(topicName, pingMessage);
+                mqttClient.publish(topicName + "_ping", pingMessage);
 
 
             } catch (MqttException e) {
                 // if something goes wrong, it should result in connectionLost
                 //  being called, so we will handle it there
-                App.log.error("ping failed - MQTT exception", e);
+                Log.e("ping failed - MQTT exception", e);
 
                 // assume the client connection is broken - trash it
                 try {
@@ -287,7 +266,7 @@ public class PahoService extends Service implements MqttCallback {
 
                 } catch (MqttException e2) {
 
-                    App.log.error("disconnect failed - MqttException exception", e2);
+                    Log.e("disconnect failed - MqttException exception", e2);
                 }
 
                 // reconnect

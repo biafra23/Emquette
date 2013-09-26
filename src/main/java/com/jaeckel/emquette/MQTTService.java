@@ -1,36 +1,17 @@
 package com.jaeckel.emquette;
 
-import android.app.AlarmManager;
-import android.app.Notification;
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.app.Service;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.SharedPreferences;
+import android.app.*;
+import android.content.*;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.provider.Settings;
-
-import com.ibm.mqtt.IMqttClient;
-import com.ibm.mqtt.MqttClient;
-import com.ibm.mqtt.MqttException;
-import com.ibm.mqtt.MqttNotConnectedException;
-import com.ibm.mqtt.MqttPersistence;
-import com.ibm.mqtt.MqttPersistenceException;
-import com.ibm.mqtt.MqttSimpleCallback;
+import com.ibm.mqtt.*;
 
 import java.lang.ref.WeakReference;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.Enumeration;
-import java.util.Hashtable;
-import java.util.UUID;
+import java.util.*;
 
 
 public class MQTTService extends Service implements MqttSimpleCallback {

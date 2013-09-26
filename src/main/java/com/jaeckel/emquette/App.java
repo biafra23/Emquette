@@ -1,7 +1,7 @@
 package com.jaeckel.emquette;
 
 import android.app.Application;
-
+import android.os.Handler;
 import org.apache.log4j.Logger;
 
 
@@ -16,6 +16,8 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        new Log().init(new Handler());
         ConfigureLog4j.configure();
 
         instance = this;
